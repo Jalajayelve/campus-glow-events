@@ -1,9 +1,9 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Calendar, Clock, Home, PlusCircle, Users } from 'lucide-react';
+import { Calendar, Clock, Home, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import EventFormDialog from './EventFormDialog';
 
 const sidebarItems = [
   { icon: Home, label: 'Home', path: '/' },
@@ -18,14 +18,10 @@ const Sidebar = () => {
   return (
     <aside className="hidden md:flex flex-col w-64 h-screen fixed left-0 top-0 pt-20 bg-black/60 backdrop-blur-lg border-r border-white/10 animate-slide-in">
       <div className="flex-1 px-4 py-6">
-        <Button 
-          variant="default" 
-          size="lg" 
-          className="w-full flex items-center justify-center gap-2 bg-glow-DEFAULT hover:bg-glow-DEFAULT/90 button-glow animate-pulse-glow"
-        >
-          <PlusCircle className="h-5 w-5" />
-          <span>Create Event</span>
-        </Button>
+        <EventFormDialog 
+          buttonClassName="w-full flex items-center justify-center gap-2 bg-glow-DEFAULT hover:bg-glow-DEFAULT/90 button-glow"
+          size="lg"
+        />
         
         <nav className="mt-8 space-y-1">
           {sidebarItems.map((item) => {

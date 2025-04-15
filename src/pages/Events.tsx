@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import Sidebar from '@/components/Sidebar';
@@ -25,6 +24,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import EventFormDialog from '@/components/EventFormDialog';
 
 // Mock data for events
 const allEvents: EventCardProps[] = [
@@ -150,9 +150,7 @@ const EventsPage = () => {
                 <Sliders className="h-4 w-4" />
               </Button>
               
-              <Button className="bg-glow-DEFAULT hover:bg-glow-DEFAULT/90 flex-shrink-0">
-                Create Event
-              </Button>
+              <EventFormDialog className="flex-shrink-0" />
             </div>
           </div>
           
