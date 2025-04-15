@@ -4,6 +4,7 @@ import { Calendar, Clock, MapPin, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { useNavigate } from 'react-router-dom';
 
 export interface EventCardProps {
   id: string;
@@ -30,6 +31,20 @@ const EventCard: React.FC<EventCardProps> = ({
   category,
   imageUrl,
 }) => {
+  const navigate = useNavigate();
+
+  // Function to handle viewing event details
+  const handleViewDetails = () => {
+    navigate(`/upcoming?event=${id}`);
+  };
+
+  // Function to handle joining an event
+  const handleJoinEvent = () => {
+    // In a real app, this would add the user to event participants
+    // For now, just navigate to upcoming events
+    navigate('/upcoming');
+  };
+
   return (
     <div className="glass-card rounded-xl overflow-hidden transition-all duration-300 hover:scale-[1.02] animate-fade-in">
       <div 
@@ -75,8 +90,8 @@ const EventCard: React.FC<EventCardProps> = ({
         </div>
         
         <div className="flex justify-between gap-2">
-          <Button variant="secondary" className="w-1/2">Details</Button>
-          <Button variant="default" className="w-1/2 bg-glow-DEFAULT hover:bg-glow-DEFAULT/90">Join</Button>
+          <Button variant="secondary" className="w-1/2" onClick={handleViewDetails}>Details</Button>
+          <Button variant="default" className="w-1/2 bg-glow-DEFAULT hover:bg-glow-DEFAULT/90" onClick={handleJoinEvent}>Join</Button>
         </div>
       </div>
     </div>

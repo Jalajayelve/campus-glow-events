@@ -4,6 +4,7 @@ import { Calendar, Clock, MapPin, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { EventCardProps } from './EventCard';
+import { useNavigate } from 'react-router-dom';
 
 interface FeaturedEventProps extends EventCardProps {
   spotlight?: boolean;
@@ -22,6 +23,12 @@ const FeaturedEvent: React.FC<FeaturedEventProps> = ({
   imageUrl,
   spotlight = false,
 }) => {
+  const navigate = useNavigate();
+  
+  const handleRegisterClick = () => {
+    navigate(`/upcoming?event=${id}`);
+  };
+
   return (
     <div className="relative h-[500px] rounded-xl overflow-hidden glass-card animate-fade-in">
       <div 
@@ -86,7 +93,10 @@ const FeaturedEvent: React.FC<FeaturedEventProps> = ({
             </div>
           </div>
           
-          <Button className="bg-glow-DEFAULT hover:bg-glow-DEFAULT/90 button-glow">
+          <Button 
+            className="bg-glow-DEFAULT hover:bg-glow-DEFAULT/90 button-glow"
+            onClick={handleRegisterClick}
+          >
             Register Now
           </Button>
         </div>

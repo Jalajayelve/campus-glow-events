@@ -6,8 +6,9 @@ import EventCard, { EventCardProps } from '@/components/EventCard';
 import FeaturedEvent from '@/components/FeaturedEvent';
 import { Button } from '@/components/ui/button';
 import { Calendar, Filter, TrendingUp } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-// Mock data for events
+// Mock data for events with AI-related images
 const featuredEvent = {
   id: 'featured-1',
   title: 'Annual Tech Fest 2025',
@@ -19,6 +20,7 @@ const featuredEvent = {
   attendees: 258,
   category: 'Technology',
   spotlight: true,
+  imageUrl: 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80',
 };
 
 const upcomingEvents: EventCardProps[] = [
@@ -32,6 +34,7 @@ const upcomingEvents: EventCardProps[] = [
     organizer: 'AI Club',
     attendees: 54,
     category: 'Workshop',
+    imageUrl: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80',
   },
   {
     id: 'event-2',
@@ -43,6 +46,7 @@ const upcomingEvents: EventCardProps[] = [
     organizer: 'Cultural Committee',
     attendees: 142,
     category: 'Cultural',
+    imageUrl: 'https://images.unsplash.com/photo-1523580494863-6f3031224c94?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80',
   },
   {
     id: 'event-3',
@@ -54,6 +58,7 @@ const upcomingEvents: EventCardProps[] = [
     organizer: 'Career Services',
     attendees: 198,
     category: 'Career',
+    imageUrl: 'https://images.unsplash.com/photo-1517048676732-d65bc937f952?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80',
   },
   {
     id: 'event-4',
@@ -65,6 +70,7 @@ const upcomingEvents: EventCardProps[] = [
     organizer: 'Entrepreneurship Club',
     attendees: 76,
     category: 'Business',
+    imageUrl: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80',
   },
 ];
 
@@ -79,6 +85,7 @@ const trendingEvents: EventCardProps[] = [
     organizer: 'Photography Club',
     attendees: 89,
     category: 'Arts',
+    imageUrl: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80',
   },
   {
     id: 'trending-2',
@@ -90,6 +97,7 @@ const trendingEvents: EventCardProps[] = [
     organizer: 'Debate Society',
     attendees: 112,
     category: 'Academic',
+    imageUrl: 'https://images.unsplash.com/photo-1577036421869-8b7c03fab34d?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80',
   },
   {
     id: 'trending-3',
@@ -101,10 +109,18 @@ const trendingEvents: EventCardProps[] = [
     organizer: 'Developer Student Club',
     attendees: 176,
     category: 'Technology',
+    imageUrl: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80',
   },
 ];
 
 const HomePage = () => {
+  const navigate = useNavigate();
+  
+  // Function to handle the "View All" button click for upcoming events
+  const handleViewAllUpcoming = () => {
+    navigate('/upcoming');
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Navbar />
@@ -113,7 +129,7 @@ const HomePage = () => {
       <main className="pt-20 md:pl-64">
         <div className="container mx-auto px-4 py-8">
           <section className="mb-12">
-            <FeaturedEvent {...featuredEvent} spotlight={true} />
+            <FeaturedEvent {...featuredEvent} spotlight={true} imageUrl={featuredEvent.imageUrl} />
           </section>
           
           <section className="mb-12">
@@ -127,7 +143,12 @@ const HomePage = () => {
                   <Filter className="h-4 w-4" />
                   <span>Filter</span>
                 </Button>
-                <Button variant="default" size="sm" className="bg-glow-DEFAULT hover:bg-glow-DEFAULT/90">
+                <Button 
+                  variant="default" 
+                  size="sm" 
+                  className="bg-glow-DEFAULT hover:bg-glow-DEFAULT/90"
+                  onClick={handleViewAllUpcoming}
+                >
                   View All
                 </Button>
               </div>
@@ -146,7 +167,11 @@ const HomePage = () => {
                 <TrendingUp className="h-6 w-6 mr-3 text-glow-secondary" />
                 <h2 className="text-2xl font-semibold">Trending Now</h2>
               </div>
-              <Button variant="ghost" size="sm">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => navigate('/events')}
+              >
                 View All
               </Button>
             </div>
