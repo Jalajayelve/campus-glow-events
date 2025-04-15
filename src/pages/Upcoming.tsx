@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
@@ -25,6 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { toast } from 'sonner';
 
 // Mock data for upcoming events
 const myEvents: EventCardProps[] = [
@@ -66,11 +66,101 @@ const myEvents: EventCardProps[] = [
   },
 ];
 
+// Function to add event to Google Calendar
+const addToGoogleCalendar = ({ title, description, location, date, time }: { 
+  title: string;
+  description: string;
+  location: string;
+  date: string;
+  time: string;
+}) => {
+  try {
+    // Parse the date and time (assuming format: "April 22, 2025" and "2:00 PM - 5:00 PM")
+    const dateParts = date.split(', ');
+    const monthDay = dateParts[0].split(' ');
+    const month = getMonthNumber(monthDay[0]);
+    const day = parseInt(monthDay[1]);
+    const year = parseInt(dateParts[1]);
+    
+    // Parse time
+    const timeParts = time.split(' - ');
+    const startTime = convertTo24Hour(timeParts[0]);
+    const endTime = timeParts.length > 1 ? convertTo24Hour(timeParts[1]) : '';
+    
+    // Format dates for Google Calendar
+    const startDate = `${year}${month.toString().padStart(2, '0')}${day.toString().padStart(2, '0')}T${startTime.replace(':', '')}00`;
+    let endDate = startDate;
+    
+    if (endTime) {
+      endDate = `${year}${month.toString().padStart(2, '0')}${day.toString().padStart(2, '0')}T${endTime.replace(':', '')}00`;
+    } else {
+      // If no end time, default to 1 hour later
+      endDate = `${year}${month.toString().padStart(2, '0')}${day.toString().padStart(2, '0')}T${(parseInt(startTime.split(':')[0]) + 1).toString().padStart(2, '0')}${startTime.split(':')[1]}00`;
+    }
+    
+    // Create Google Calendar URL
+    const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${startDate}/${endDate}&details=${encodeURIComponent(description)}&location=${encodeURIComponent(location)}&sf=true&output=xml`;
+    
+    // Open in new tab
+    window.open(googleCalendarUrl, '_blank');
+    
+    toast.success("Event added to Google Calendar!");
+  } catch (error) {
+    console.error("Error adding to calendar:", error);
+    toast.error("Failed to add event to calendar. Please try again.");
+  }
+};
+
+// Helper function to convert month name to number
+const getMonthNumber = (monthName: string) => {
+  const months: { [key: string]: number } = {
+    'January': 1,
+    'February': 2,
+    'March': 3,
+    'April': 4,
+    'May': 5,
+    'June': 6,
+    'July': 7,
+    'August': 8,
+    'September': 9,
+    'October': 10,
+    'November': 11,
+    'December': 12
+  };
+  return months[monthName];
+};
+
+// Helper function to convert 12-hour time to 24-hour time
+const convertTo24Hour = (time12h: string) => {
+  const [time, modifier] = time12h.split(' ');
+  let [hours, minutes] = time.split(':');
+  
+  if (hours === '12') {
+    hours = '00';
+  }
+  
+  if (modifier === 'PM') {
+    hours = (parseInt(hours, 10) + 12).toString();
+  }
+  
+  return `${hours.padStart(2, '0')}:${minutes}`;
+};
+
 const EventItem = ({ event, isToday }: { event: EventCardProps, isToday: boolean }) => {
   const navigate = useNavigate();
   
   const handleDetailsClick = () => {
     navigate(`/upcoming?event=${event.id}`);
+  };
+  
+  const handleAddToCalendar = () => {
+    addToGoogleCalendar({
+      title: event.title,
+      description: event.description,
+      location: event.location,
+      date: event.date,
+      time: event.time
+    });
   };
   
   return (
@@ -115,7 +205,12 @@ const EventItem = ({ event, isToday }: { event: EventCardProps, isToday: boolean
         
         <div className="flex items-center gap-3">
           <Button variant="outline" size="sm" onClick={handleDetailsClick}>Details</Button>
-          <Button variant="default" size="sm" className="bg-glow-DEFAULT hover:bg-glow-DEFAULT/90">
+          <Button 
+            variant="default" 
+            size="sm" 
+            className="bg-glow-DEFAULT hover:bg-glow-DEFAULT/90"
+            onClick={handleAddToCalendar}
+          >
             Add to Calendar
           </Button>
         </div>
@@ -126,6 +221,16 @@ const EventItem = ({ event, isToday }: { event: EventCardProps, isToday: boolean
 
 const EventDetails = ({ event, onClose }: { event: EventCardProps, onClose: () => void }) => {
   if (!event) return null;
+  
+  const handleAddToCalendar = () => {
+    addToGoogleCalendar({
+      title: event.title,
+      description: event.description,
+      location: event.location,
+      date: event.date,
+      time: event.time
+    });
+  };
   
   return (
     <div className="glass-card p-6 rounded-xl animate-fade-in">
@@ -194,7 +299,12 @@ const EventDetails = ({ event, onClose }: { event: EventCardProps, onClose: () =
       
       <div className="flex justify-end gap-3">
         <Button variant="outline">Share Event</Button>
-        <Button className="bg-glow-DEFAULT hover:bg-glow-DEFAULT/90">Register Now</Button>
+        <Button 
+          className="bg-glow-DEFAULT hover:bg-glow-DEFAULT/90"
+          onClick={handleAddToCalendar}
+        >
+          Add to Calendar
+        </Button>
       </div>
     </div>
   );
@@ -230,6 +340,19 @@ const UpcomingPage = () => {
     navigate('/upcoming');
   };
 
+  const handleRegisterNow = () => {
+    if (selectedEvent) {
+      addToGoogleCalendar({
+        title: selectedEvent.title,
+        description: selectedEvent.description,
+        location: selectedEvent.location,
+        date: selectedEvent.date,
+        time: selectedEvent.time
+      });
+    }
+    setOpen(false);
+  };
+  
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Navbar />
@@ -379,7 +502,12 @@ const UpcomingPage = () => {
               
               <div className="flex justify-end gap-3 mt-6">
                 <Button variant="outline" onClick={() => setOpen(false)}>Close</Button>
-                <Button className="bg-glow-DEFAULT hover:bg-glow-DEFAULT/90">Register Now</Button>
+                <Button 
+                  className="bg-glow-DEFAULT hover:bg-glow-DEFAULT/90"
+                  onClick={handleRegisterNow}
+                >
+                  Add to Calendar
+                </Button>
               </div>
             </div>
           )}
