@@ -26,12 +26,14 @@ type EventFormValues = z.infer<typeof eventFormSchema>;
 
 interface EventFormDialogProps {
   buttonClassName?: string;
+  className?: string; // Add className prop to the interface
   variant?: "default" | "outline" | "secondary" | "ghost" | "link" | "destructive";
   size?: "default" | "sm" | "lg" | "icon";
 }
 
 const EventFormDialog = ({ 
   buttonClassName,
+  className,
   variant = "default",
   size = "default" 
 }: EventFormDialogProps) => {
