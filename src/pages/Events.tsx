@@ -26,129 +26,43 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import EventFormDialog from '@/components/EventFormDialog';
-
-// Mock data for events
-const allEvents: EventCardProps[] = [
-  {
-    id: 'event-1',
-    title: 'AI Workshop Series',
-    description: 'Learn the fundamentals of AI and machine learning in this hands-on workshop series.',
-    date: 'April 22, 2025',
-    time: '2:00 PM - 5:00 PM',
-    location: 'Engineering Block, Room 302',
-    organizer: 'AI Club',
-    attendees: 54,
-    category: 'Workshop',
-    imageUrl: 'https://images.unsplash.com/photo-1591453089816-0fbb971b454c?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    id: 'event-2',
-    title: 'Spring Cultural Night',
-    description: 'Experience diverse cultures through performances, music, food, and more.',
-    date: 'April 25, 2025',
-    time: '6:00 PM - 10:00 PM',
-    location: 'Student Center',
-    organizer: 'Cultural Committee',
-    attendees: 142,
-    category: 'Cultural',
-    imageUrl: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    id: 'event-3',
-    title: 'Career Fair 2025',
-    description: 'Connect with top employers from various industries looking to hire fresh talent.',
-    date: 'April 27, 2025',
-    time: '9:00 AM - 4:00 PM',
-    location: 'Business School Atrium',
-    organizer: 'Career Services',
-    attendees: 198,
-    category: 'Career',
-    imageUrl: 'https://images.unsplash.com/photo-1560439514-4e9645039924?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    id: 'event-4',
-    title: 'Startup Pitch Competition',
-    description: 'Pitch your innovative business ideas to a panel of investors and entrepreneurs.',
-    date: 'May 2, 2025',
-    time: '1:00 PM - 5:00 PM',
-    location: 'Innovation Hub',
-    organizer: 'Entrepreneurship Club',
-    attendees: 76,
-    category: 'Business',
-    imageUrl: 'https://images.unsplash.com/photo-1605371924599-2d0365da1ae0?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    id: 'trending-1',
-    title: 'Photography Exhibition',
-    description: 'An exhibition showcasing the best photographs taken by students around campus.',
-    date: 'April 23, 2025',
-    time: '11:00 AM - 7:00 PM',
-    location: 'Art Gallery',
-    organizer: 'Photography Club',
-    attendees: 89,
-    category: 'Arts',
-    imageUrl: 'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    id: 'trending-2',
-    title: 'Debate Championship',
-    description: 'Annual inter-college debate competition on contemporary social and political issues.',
-    date: 'April 29, 2025',
-    time: '10:00 AM - 6:00 PM',
-    location: 'Main Auditorium',
-    organizer: 'Debate Society',
-    attendees: 112,
-    category: 'Academic',
-    imageUrl: 'https://images.unsplash.com/photo-1529651737248-dad5e287768e?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    id: 'trending-3',
-    title: 'Hackathon 2025',
-    description: '24-hour coding marathon to solve real-world problems with technology.',
-    date: 'May 5-6, 2025',
-    time: 'Starts at 9:00 AM',
-    location: 'CS Department Labs',
-    organizer: 'Developer Student Club',
-    attendees: 176,
-    category: 'Technology',
-    imageUrl: 'https://images.unsplash.com/photo-1517048676732-d65bc937f952?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    id: 'featured-1',
-    title: 'Annual Tech Fest 2025',
-    description: 'Join us for the biggest tech event of the year with workshops, hackathons, and exciting tech talks from industry leaders.',
-    date: 'May 15, 2025',
-    time: '10:00 AM - 6:00 PM',
-    location: 'Central Campus Auditorium',
-    organizer: 'Computer Science Department',
-    attendees: 258,
-    category: 'Technology',
-    imageUrl: 'https://images.unsplash.com/photo-1573164713988-8665fc963095?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80',
-  },
-];
+import { toast } from 'sonner';
 
 const EventsPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentTab, setCurrentTab] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
   const [categoryFilter, setCategoryFilter] = useState('all');
-  const [filteredEvents, setFilteredEvents] = useState<EventCardProps[]>(allEvents);
+  const [events, setEvents] = useState<EventCardProps[]>([]);
+  const [filteredEvents, setFilteredEvents] = useState<EventCardProps[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   
-  // Apply filters whenever search, tab, sort, or category changes
-  useEffect(() => {
-    let result = [...allEvents];
-    
-    // Apply search filter
-    if (searchQuery.trim() !== '') {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(event => 
-        event.title.toLowerCase().includes(query) ||
-        event.description.toLowerCase().includes(query) ||
-        event.organizer.toLowerCase().includes(query) ||
-        event.category.toLowerCase().includes(query) ||
-        event.location.toLowerCase().includes(query)
-      );
+  // Fetch events from Flask API
+  const fetchEvents = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`http://localhost:5000/api/events?search=${searchQuery}&category=${categoryFilter}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch events');
+      }
+      const data = await response.json();
+      setEvents(data);
+    } catch (error) {
+      console.error('Error fetching events:', error);
+      toast.error('Failed to load events. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
+  };
+  
+  // Fetch events when search or category changes
+  useEffect(() => {
+    fetchEvents();
+  }, [searchQuery, categoryFilter]);
+  
+  // Apply client-side filters (tab and sort)
+  useEffect(() => {
+    let result = [...events];
     
     // Apply tab filter (time-based)
     if (currentTab !== 'all') {
@@ -171,13 +85,6 @@ const EventsPage = () => {
       });
     }
     
-    // Apply category filter
-    if (categoryFilter !== 'all') {
-      result = result.filter(event => 
-        event.category.toLowerCase() === categoryFilter.toLowerCase()
-      );
-    }
-    
     // Apply sorting
     if (sortBy === 'newest') {
       result.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -188,7 +95,7 @@ const EventsPage = () => {
     }
     
     setFilteredEvents(result);
-  }, [searchQuery, currentTab, sortBy, categoryFilter]);
+  }, [events, currentTab, sortBy]);
   
   const handleTabChange = (value: string) => {
     setCurrentTab(value);
@@ -200,6 +107,27 @@ const EventsPage = () => {
   
   const handleCategoryChange = (value: string) => {
     setCategoryFilter(value);
+  };
+  
+  // Handle search input change with debounce
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
+  
+  // Initialize demo data
+  const initDemoData = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/init-demo-data', {
+        method: 'POST',
+      });
+      if (response.ok) {
+        toast.success('Demo data initialized. Refreshing events...');
+        fetchEvents();
+      }
+    } catch (error) {
+      console.error('Error initializing demo data:', error);
+      toast.error('Failed to initialize demo data');
+    }
   };
   
   return (
@@ -223,7 +151,7 @@ const EventsPage = () => {
                   placeholder="Search events..." 
                   className="pl-10 bg-secondary/50 w-full"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={handleSearchChange}
                 />
               </div>
               
@@ -232,6 +160,15 @@ const EventsPage = () => {
               </Button>
               
               <EventFormDialog className="flex-shrink-0" />
+              
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                onClick={initDemoData}
+                className="flex-shrink-0"
+              >
+                Init Demo Data
+              </Button>
             </div>
           </div>
           
@@ -281,7 +218,11 @@ const EventsPage = () => {
             </div>
           </div>
           
-          {filteredEvents.length === 0 ? (
+          {isLoading ? (
+            <div className="flex justify-center items-center p-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-glow-DEFAULT"></div>
+            </div>
+          ) : filteredEvents.length === 0 ? (
             <div className="flex flex-col items-center justify-center p-8 mt-8 text-center">
               <div className="mb-4 text-muted-foreground">
                 <Search className="h-12 w-12 mx-auto mb-2" />
@@ -307,8 +248,8 @@ const EventsPage = () => {
           
           {filteredEvents.length > 0 && (
             <div className="flex justify-center mt-8">
-              <Button variant="outline" className="mx-auto">
-                Load More Events
+              <Button variant="outline" className="mx-auto" onClick={fetchEvents}>
+                Refresh Events
               </Button>
             </div>
           )}
