@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar, Filter, TrendingUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { fetchEvents, initDemoData as initDemoDataApi } from '@/lib/api';
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -18,15 +19,10 @@ const HomePage = () => {
   
   // Fetch all events from the API
   useEffect(() => {
-    const fetchEvents = async () => {
+    const loadEvents = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch('http://localhost:5000/api/events');
-        if (!response.ok) {
-          throw new Error('Failed to fetch events');
-        }
-        
-        const events = await response.json();
+        const events = await fetchEvents();
         
         // Find featured event
         const featured = events.find((event: any) => event.spotlight === true);
@@ -48,14 +44,14 @@ const HomePage = () => {
           .slice(0, 3);
         setTrendingEvents(trending);
       } catch (error) {
-        console.error('Error fetching events:', error);
+        console.error('Error loading events:', error);
         toast.error('Failed to load events. Please try again.');
       } finally {
         setIsLoading(false);
       }
     };
     
-    fetchEvents();
+    loadEvents();
   }, []);
   
   // Function to handle the "View All" button click for upcoming events
@@ -66,11 +62,10 @@ const HomePage = () => {
   // Initialize demo data if needed
   const initDemoData = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/init-demo-data', {
-        method: 'POST',
-      });
-      if (response.ok) {
+      const result = await initDemoDataApi();
+      if (result) {
         window.location.reload(); // Reload the page to see the data
+        toast.success('Demo data initialized. Refreshing page...');
       }
     } catch (error) {
       console.error('Error initializing demo data:', error);

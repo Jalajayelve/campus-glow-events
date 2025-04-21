@@ -1,12 +1,22 @@
 
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Bell, Calendar, Menu, Search, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 
 const Navbar = () => {
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/events?search=${encodeURIComponent(searchQuery)}`);
+    }
+  };
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-black/70 backdrop-blur-lg border-b border-white/10 animate-fade-in">
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
@@ -16,14 +26,19 @@ const Navbar = () => {
             <span className="text-xl font-semibold tracking-tight">CampusGlow</span>
           </Link>
           
-          <div className="hidden md:flex relative max-w-sm">
+          <form onSubmit={handleSearch} className="hidden md:flex relative max-w-sm">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input 
               type="search" 
               placeholder="Search events..." 
               className="pl-10 bg-secondary/50 border-secondary"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
-          </div>
+            <Button type="submit" variant="ghost" size="icon" className="absolute right-1 top-1/2 transform -translate-y-1/2">
+              <Search className="h-4 w-4" />
+            </Button>
+          </form>
         </div>
         
         <div className="flex items-center gap-4">

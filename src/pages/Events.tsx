@@ -27,9 +27,20 @@ import {
 } from "@/components/ui/tabs";
 import EventFormDialog from '@/components/EventFormDialog';
 import { toast } from 'sonner';
+import { fetchEvents, initDemoData as initDemoDataApi } from '@/lib/api';
+import { useLocation, useNavigate } from 'react-router-dom';
+
+// Helper function to get URL parameters
+function useQuery() {
+  return new URLSearchParams(useLocation().search);
+}
 
 const EventsPage = () => {
-  const [searchQuery, setSearchQuery] = useState('');
+  const navigate = useNavigate();
+  const query = useQuery();
+  const initialSearch = query.get('search') || '';
+  
+  const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [currentTab, setCurrentTab] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
   const [categoryFilter, setCategoryFilter] = useState('all');
@@ -37,15 +48,11 @@ const EventsPage = () => {
   const [filteredEvents, setFilteredEvents] = useState<EventCardProps[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Fetch events from Flask API
-  const fetchEvents = async () => {
+  // Fetch events from API
+  const loadEvents = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`http://localhost:5000/api/events?search=${searchQuery}&category=${categoryFilter}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch events');
-      }
-      const data = await response.json();
+      const data = await fetchEvents(searchQuery, categoryFilter);
       setEvents(data);
     } catch (error) {
       console.error('Error fetching events:', error);
@@ -55,9 +62,13 @@ const EventsPage = () => {
     }
   };
   
-  // Fetch events when search or category changes
+  // Fetch events when component mounts or when search/category changes
   useEffect(() => {
-    fetchEvents();
+    loadEvents();
+    // Update URL with search query if it exists
+    if (searchQuery) {
+      navigate(`/events?search=${encodeURIComponent(searchQuery)}`, { replace: true });
+    }
   }, [searchQuery, categoryFilter]);
   
   // Apply client-side filters (tab and sort)
@@ -109,20 +120,18 @@ const EventsPage = () => {
     setCategoryFilter(value);
   };
   
-  // Handle search input change with debounce
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    loadEvents();
   };
   
   // Initialize demo data
   const initDemoData = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/init-demo-data', {
-        method: 'POST',
-      });
-      if (response.ok) {
+      const result = await initDemoDataApi();
+      if (result) {
         toast.success('Demo data initialized. Refreshing events...');
-        fetchEvents();
+        loadEvents();
       }
     } catch (error) {
       console.error('Error initializing demo data:', error);
@@ -144,16 +153,19 @@ const EventsPage = () => {
             </div>
             
             <div className="w-full md:w-auto flex flex-col md:flex-row gap-4">
-              <div className="relative flex-1">
+              <form onSubmit={handleSearchSubmit} className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input 
                   type="search" 
                   placeholder="Search events..." 
                   className="pl-10 bg-secondary/50 w-full"
                   value={searchQuery}
-                  onChange={handleSearchChange}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                 />
-              </div>
+                <Button type="submit" variant="ghost" size="icon" className="absolute right-1 top-1/2 transform -translate-y-1/2">
+                  <Search className="h-4 w-4" />
+                </Button>
+              </form>
               
               <Button variant="outline" size="icon" className="flex-shrink-0">
                 <Sliders className="h-4 w-4" />
@@ -234,6 +246,7 @@ const EventsPage = () => {
                 setCurrentTab('all');
                 setSortBy('newest');
                 setCategoryFilter('all');
+                navigate('/events', { replace: true });
               }}>
                 Clear all filters
               </Button>
@@ -248,7 +261,7 @@ const EventsPage = () => {
           
           {filteredEvents.length > 0 && (
             <div className="flex justify-center mt-8">
-              <Button variant="outline" className="mx-auto" onClick={fetchEvents}>
+              <Button variant="outline" className="mx-auto" onClick={loadEvents}>
                 Refresh Events
               </Button>
             </div>

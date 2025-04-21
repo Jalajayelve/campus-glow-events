@@ -44,13 +44,22 @@ def get_events():
                search in event.get('location', '').lower()
         ]
     
+    # Ensure all events have an id field
+    for event in events:
+        if 'id' not in event:
+            event['id'] = event.get('_id', 'event-' + str(hash(event.get('title', ''))))
+    
     return jsonify(events)
 
 @app.route('/api/events/<event_id>', methods=['GET'])
 def get_event(event_id):
     event_doc = db.collection('events').document(event_id).get()
     if event_doc.exists:
-        return jsonify(event_doc.to_dict())
+        event_data = event_doc.to_dict()
+        # Ensure id is set
+        if 'id' not in event_data:
+            event_data['id'] = event_id
+        return jsonify(event_data)
     return jsonify({"error": "Event not found"}), 404
 
 @app.route('/api/events', methods=['POST'])
@@ -63,7 +72,7 @@ def create_event():
     # Generate a new ID
     event_ref = db.collection('events').document()
     new_event['id'] = event_ref.id
-    new_event['attendees'] = 0
+    new_event['attendees'] = new_event.get('attendees', 0)
     
     # Save to Firestore
     event_ref.set(new_event)
@@ -86,6 +95,9 @@ def join_event(event_id):
     
     # Get updated document
     updated_event = event_ref.get().to_dict()
+    # Ensure id is set
+    if 'id' not in updated_event:
+        updated_event['id'] = event_id
     
     return jsonify(updated_event)
 
@@ -135,6 +147,54 @@ def init_demo_data():
             "spotlight": True,
             "imageUrl": "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?ixlib=rb-1.2.1&auto=format&fit=crop&w=1200&q=80",
         },
+        {
+            "id": "event-3",
+            "title": "Career Fair 2025",
+            "description": "Connect with top employers, explore internship and job opportunities, and get your resume reviewed by industry professionals.",
+            "date": "May 5, 2025",
+            "time": "9:00 AM - 4:00 PM",
+            "location": "Business School Atrium",
+            "organizer": "Career Services",
+            "attendees": 178,
+            "category": "Career",
+            "imageUrl": "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80",
+        },
+        {
+            "id": "event-4",
+            "title": "Entrepreneurship Summit",
+            "description": "Learn from successful entrepreneurs, pitch your ideas, and network with potential investors and mentors.",
+            "date": "April 29, 2025",
+            "time": "10:00 AM - 5:00 PM",
+            "location": "Innovation Center",
+            "organizer": "Business Club",
+            "attendees": 92,
+            "category": "Business",
+            "imageUrl": "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80",
+        },
+        {
+            "id": "event-5",
+            "title": "Photography Exhibition",
+            "description": "View stunning photographs by talented student photographers and participate in photography workshops.",
+            "date": "May 10, 2025",
+            "time": "11:00 AM - 7:00 PM",
+            "location": "Arts Building Gallery",
+            "organizer": "Photography Club",
+            "attendees": 65,
+            "category": "Arts",
+            "imageUrl": "https://images.unsplash.com/photo-1554048612-b6a482bc67e5?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80",
+        },
+        {
+            "id": "event-6",
+            "title": "Research Symposium",
+            "description": "Explore groundbreaking research projects and presentations by faculty and graduate students.",
+            "date": "May 18, 2025",
+            "time": "1:00 PM - 6:00 PM",
+            "location": "Science Complex, Hall A",
+            "organizer": "Research Department",
+            "attendees": 125,
+            "category": "Academic",
+            "imageUrl": "https://images.unsplash.com/photo-1567721913486-6585f069b332?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80",
+        }
     ]
     
     # Add each event with its ID as the document ID
