@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Sidebar from '@/components/Sidebar';
@@ -29,6 +28,9 @@ import EventFormDialog from '@/components/EventFormDialog';
 import { toast } from 'sonner';
 import { fetchEvents, initDemoData as initDemoDataApi } from '@/lib/api';
 import { useLocation, useNavigate } from 'react-router-dom';
+import EventSearchBar from "@/components/events/EventSearchBar";
+import EventFilters from "@/components/events/EventFilters";
+import EventList from "@/components/events/EventList";
 
 // Helper function to get URL parameters
 function useQuery() {
@@ -143,7 +145,6 @@ const EventsPage = () => {
     <div className="min-h-screen bg-background text-foreground">
       <Navbar />
       <Sidebar />
-      
       <main className="pt-20 md:pl-64">
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
@@ -151,28 +152,16 @@ const EventsPage = () => {
               <Calendar className="h-7 w-7 mr-3 text-glow-DEFAULT" />
               <h1 className="text-3xl font-bold">Events</h1>
             </div>
-            
             <div className="w-full md:w-auto flex flex-col md:flex-row gap-4">
-              <form onSubmit={handleSearchSubmit} className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  type="search" 
-                  placeholder="Search events..." 
-                  className="pl-10 bg-secondary/50 w-full"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-                <Button type="submit" variant="ghost" size="icon" className="absolute right-1 top-1/2 transform -translate-y-1/2">
-                  <Search className="h-4 w-4" />
-                </Button>
-              </form>
-              
+              <EventSearchBar 
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                onSubmit={handleSearchSubmit}
+              />
               <Button variant="outline" size="icon" className="flex-shrink-0">
                 <Sliders className="h-4 w-4" />
               </Button>
-              
               <EventFormDialog className="flex-shrink-0" />
-              
               <Button 
                 variant="secondary" 
                 size="sm" 
@@ -183,89 +172,33 @@ const EventsPage = () => {
               </Button>
             </div>
           </div>
-          
           <div className="bg-black/40 backdrop-blur-md rounded-lg border border-white/10 p-4 mb-8">
-            <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-              <Tabs defaultValue="all" className="w-full" value={currentTab} onValueChange={handleTabChange}>
-                <TabsList className="bg-secondary/50">
-                  <TabsTrigger value="all">All Events</TabsTrigger>
-                  <TabsTrigger value="today">Today</TabsTrigger>
-                  <TabsTrigger value="week">This Week</TabsTrigger>
-                  <TabsTrigger value="month">This Month</TabsTrigger>
-                </TabsList>
-              </Tabs>
-              
-              <div className="flex items-center gap-3 w-full lg:w-auto">
-                <Select defaultValue={sortBy} value={sortBy} onValueChange={handleSortChange}>
-                  <SelectTrigger className="w-full lg:w-40 bg-secondary/50">
-                    <SelectValue placeholder="Sort by" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="newest">Newest First</SelectItem>
-                    <SelectItem value="oldest">Oldest First</SelectItem>
-                    <SelectItem value="popular">Most Popular</SelectItem>
-                  </SelectContent>
-                </Select>
-                
-                <Select defaultValue={categoryFilter} value={categoryFilter} onValueChange={handleCategoryChange}>
-                  <SelectTrigger className="w-full lg:w-40 bg-secondary/50">
-                    <SelectValue placeholder="Category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
-                    <SelectItem value="Technology">Technology</SelectItem>
-                    <SelectItem value="Cultural">Cultural</SelectItem>
-                    <SelectItem value="Workshop">Workshop</SelectItem>
-                    <SelectItem value="Career">Career</SelectItem>
-                    <SelectItem value="Business">Business</SelectItem>
-                    <SelectItem value="Arts">Arts</SelectItem>
-                    <SelectItem value="Academic">Academic</SelectItem>
-                  </SelectContent>
-                </Select>
-                
-                <Button variant="ghost" size="icon" className="hidden lg:flex">
-                  <ListFilter className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
+            <EventFilters
+              currentTab={currentTab}
+              onTabChange={handleTabChange}
+              sortBy={sortBy}
+              onSortChange={handleSortChange}
+              categoryFilter={categoryFilter}
+              onCategoryChange={handleCategoryChange}
+            />
           </div>
-          
-          {isLoading ? (
-            <div className="flex justify-center items-center p-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-glow-DEFAULT"></div>
-            </div>
-          ) : filteredEvents.length === 0 ? (
-            <div className="flex flex-col items-center justify-center p-8 mt-8 text-center">
-              <div className="mb-4 text-muted-foreground">
-                <Search className="h-12 w-12 mx-auto mb-2" />
-                <h3 className="text-xl font-semibold mb-2">No events found</h3>
-                <p>Try adjusting your search or filters to find what you're looking for.</p>
-              </div>
-              <Button variant="outline" onClick={() => {
-                setSearchQuery('');
-                setCurrentTab('all');
-                setSortBy('newest');
-                setCategoryFilter('all');
-                navigate('/events', { replace: true });
-              }}>
-                Clear all filters
-              </Button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredEvents.map(event => (
-                <EventCard key={event.id} {...event} />
-              ))}
-            </div>
-          )}
-          
-          {filteredEvents.length > 0 && (
-            <div className="flex justify-center mt-8">
-              <Button variant="outline" className="mx-auto" onClick={loadEvents}>
-                Refresh Events
-              </Button>
-            </div>
-          )}
+          <EventList
+            isLoading={isLoading}
+            filteredEvents={filteredEvents}
+            onClearFilters={() => {
+              setSearchQuery("");
+              setCurrentTab("all");
+              setSortBy("newest");
+              setCategoryFilter("all");
+              navigate("/events", { replace: true });
+            }}
+            onRefresh={loadEvents}
+            currentTab={currentTab}
+            setSearchQuery={setSearchQuery}
+            setCurrentTab={setCurrentTab}
+            setSortBy={setSortBy}
+            setCategoryFilter={setCategoryFilter}
+          />
         </div>
       </main>
     </div>
