@@ -1,29 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Sidebar from '@/components/Sidebar';
-import EventCard, { EventCardProps } from '@/components/EventCard';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { 
-  Calendar, 
-  Filter, 
-  ListFilter,
-  Search,
-  Sliders,
-} from 'lucide-react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Sliders } from 'lucide-react';
 import EventFormDialog from '@/components/EventFormDialog';
 import { toast } from 'sonner';
 import { fetchEvents, initDemoData as initDemoDataApi } from '@/lib/api';
@@ -31,6 +11,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import EventSearchBar from "@/components/events/EventSearchBar";
 import EventFilters from "@/components/events/EventFilters";
 import EventList from "@/components/events/EventList";
+import { Calendar } from 'lucide-react';
 
 // Helper function to get URL parameters
 function useQuery() {
@@ -46,19 +27,21 @@ const EventsPage = () => {
   const [currentTab, setCurrentTab] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
   const [categoryFilter, setCategoryFilter] = useState('all');
-  const [events, setEvents] = useState<EventCardProps[]>([]);
-  const [filteredEvents, setFilteredEvents] = useState<EventCardProps[]>([]);
+  const [events, setEvents] = useState([]);
+  const [filteredEvents, setFilteredEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   
   // Fetch events from API
   const loadEvents = async () => {
     setIsLoading(true);
+    setError(null);
     try {
       const data = await fetchEvents(searchQuery, categoryFilter);
       setEvents(data);
     } catch (error) {
       console.error('Error fetching events:', error);
-      toast.error('Failed to load events. Please try again.');
+      setError('Unable to connect to the backend server. Please ensure your Flask server is running on http://localhost:5000.');
     } finally {
       setIsLoading(false);
     }
@@ -110,19 +93,19 @@ const EventsPage = () => {
     setFilteredEvents(result);
   }, [events, currentTab, sortBy]);
   
-  const handleTabChange = (value: string) => {
+  const handleTabChange = (value) => {
     setCurrentTab(value);
   };
   
-  const handleSortChange = (value: string) => {
+  const handleSortChange = (value) => {
     setSortBy(value);
   };
   
-  const handleCategoryChange = (value: string) => {
+  const handleCategoryChange = (value) => {
     setCategoryFilter(value);
   };
   
-  const handleSearchSubmit = (e: React.FormEvent) => {
+  const handleSearchSubmit = (e) => {
     e.preventDefault();
     loadEvents();
   };
@@ -130,14 +113,17 @@ const EventsPage = () => {
   // Initialize demo data
   const initDemoData = async () => {
     try {
+      setIsLoading(true);
       const result = await initDemoDataApi();
       if (result) {
         toast.success('Demo data initialized. Refreshing events...');
-        loadEvents();
+        await loadEvents();
       }
     } catch (error) {
       console.error('Error initializing demo data:', error);
-      toast.error('Failed to initialize demo data');
+      setError('Failed to initialize demo data. Please ensure your Flask server is running on http://localhost:5000.');
+    } finally {
+      setIsLoading(false);
     }
   };
   
@@ -167,21 +153,31 @@ const EventsPage = () => {
                 size="sm" 
                 onClick={initDemoData}
                 className="flex-shrink-0"
+                disabled={isLoading}
               >
-                Init Demo Data
+                {isLoading ? 'Initializing...' : 'Init Demo Data'}
               </Button>
             </div>
           </div>
-          <div className="bg-black/40 backdrop-blur-md rounded-lg border border-white/10 p-4 mb-8">
-            <EventFilters
-              currentTab={currentTab}
-              onTabChange={handleTabChange}
-              sortBy={sortBy}
-              onSortChange={handleSortChange}
-              categoryFilter={categoryFilter}
-              onCategoryChange={handleCategoryChange}
-            />
-          </div>
+          
+          {error ? (
+            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 mb-8">
+              <h3 className="text-lg font-medium text-red-500 mb-2">Connection Error</h3>
+              <p className="text-muted-foreground">{error}</p>
+            </div>
+          ) : (
+            <div className="bg-black/40 backdrop-blur-md rounded-lg border border-white/10 p-4 mb-8">
+              <EventFilters
+                currentTab={currentTab}
+                onTabChange={handleTabChange}
+                sortBy={sortBy}
+                onSortChange={handleSortChange}
+                categoryFilter={categoryFilter}
+                onCategoryChange={handleCategoryChange}
+              />
+            </div>
+          )}
+          
           <EventList
             isLoading={isLoading}
             filteredEvents={filteredEvents}
@@ -198,6 +194,7 @@ const EventsPage = () => {
             setCurrentTab={setCurrentTab}
             setSortBy={setSortBy}
             setCategoryFilter={setCategoryFilter}
+            error={error}
           />
         </div>
       </main>

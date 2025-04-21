@@ -2,7 +2,7 @@
 import React from "react";
 import EventCard, { EventCardProps } from "@/components/EventCard";
 import { Button } from "@/components/ui/button";
-import { Search } from "lucide-react";
+import { Search, AlertCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface EventListProps {
@@ -15,6 +15,7 @@ interface EventListProps {
   setCurrentTab: (s: string) => void;
   setSortBy: (s: string) => void;
   setCategoryFilter: (s: string) => void;
+  error?: string | null;
 }
 
 const EventList: React.FC<EventListProps> = ({
@@ -22,12 +23,27 @@ const EventList: React.FC<EventListProps> = ({
   filteredEvents,
   onClearFilters,
   onRefresh,
+  error
 }) => {
   const navigate = useNavigate();
+  
   if (isLoading) {
     return (
       <div className="flex justify-center items-center p-12">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-glow-DEFAULT"></div>
+      </div>
+    );
+  }
+  
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center p-8 mt-8 text-center bg-red-500/10 border border-red-500/20 rounded-lg">
+        <AlertCircle className="h-12 w-12 text-red-500 mb-4" />
+        <h3 className="text-xl font-semibold mb-2">Connection Error</h3>
+        <p className="text-muted-foreground mb-6">{error}</p>
+        <Button variant="outline" onClick={onRefresh}>
+          Try Again
+        </Button>
       </div>
     );
   }
