@@ -40,18 +40,37 @@ const EventCard: React.FC<EventCardProps> = ({
   };
 
   // Function to handle joining an event
-  const handleJoinEvent = () => {
-    // Create Google Calendar event
-    addToGoogleCalendar({
-      title,
-      description,
-      location,
-      date,
-      time
-    });
-    
-    // Navigate to upcoming events
-    navigate('/upcoming');
+  const handleJoinEvent = async () => {
+    try {
+      // Call Flask API to join the event
+      const response = await fetch(`http://localhost:5000/api/events/${id}/join`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to join event');
+      }
+      
+      // Create Google Calendar event
+      addToGoogleCalendar({
+        title,
+        description,
+        location,
+        date,
+        time
+      });
+      
+      toast.success("Successfully joined the event!");
+      
+      // Navigate to upcoming events
+      navigate('/upcoming');
+    } catch (error) {
+      console.error("Error joining event:", error);
+      toast.error("Failed to join the event. Please try again.");
+    }
   };
 
   // Function to add event to Google Calendar
